@@ -4,7 +4,7 @@ const itemList = document.getElementById('item-list');
 const clearBtn = document.getElementById('clear');
 const itemFilter = document.getElementById('filter');
 
-function addItem(e) {
+function onAddItemSubmit(e) {
     e.preventDefault();
 
     const newItem = itemInput.value;
@@ -15,20 +15,44 @@ function addItem(e) {
         return;
     }
 
+    // Llamamos a la función que crea los productos y los agrega al DOM
+    addItemToDom(newItem);
+
+    // Agregar producto a local storage
+    addItemToStorage(newItem);
+    
+    // Usamos la función check UI para volver a mostrar el filtro y el botón de clear all
+    checkUI();
+
+    itemInput.value = '';
+}
+
+function addItemToDom(item) {
     // Crear producto para la lista
     const li = document.createElement('li');
-    li.appendChild(document.createTextNode(newItem));
+    li.appendChild(document.createTextNode(item));
 
     const button = createButton('remove-item btn-link text-red');
     li.appendChild(button);
 
     // Se agrega el producto (li) al DOM
     itemList.appendChild(li);
-    
-    // Usamos la función check UI para volver a mostrar el filtro y el botón de clear all
-    checkUI();
+}
 
-    itemInput.value = '';
+function addItemToStorage(item) {
+    let itemsFromStorage;
+
+    if(localStorage.getItem('items') === null) {
+        itemsFromStorage = [];
+    } else {
+        itemsFromStorage = JSON.parse(localStorage.getItem('items'));
+    }
+
+    // Agregar nuevos productos(items) al array
+    itemsFromStorage.push(item);
+
+    // Convertir a JSON string y guardarlo en local storage
+    localStorage.setItem('items', JSON.stringify(itemsFromStorage));
 }
 
 function createButton(classes) {
@@ -64,6 +88,21 @@ function clearItems(e) {
     checkUI();
 }
 
+function filterItems(e) {
+    const items = itemList.querySelectorAll('li');
+    const text = e.target.value.toLowerCase();
+    
+    items.forEach(item => {
+        const itemName = item.firstChild.textContent.toLowerCase();
+
+        if(itemName.indexOf(text) != -1) {
+            item.style.display = 'flex';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
 function checkUI() {
     const items = itemList.querySelectorAll('li');
 
@@ -77,8 +116,9 @@ function checkUI() {
 }
 
 // Event listeners
-itemForm.addEventListener('submit', addItem);
+itemForm.addEventListener('submit', onAddItemSubmit);
 itemList.addEventListener('click', removeItem);
 clearBtn.addEventListener('click', clearItems);
+itemFilter.addEventListener('input', filterItems);
 
 checkUI();
